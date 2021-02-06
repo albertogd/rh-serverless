@@ -1,5 +1,5 @@
-name: template-tutorial
-title: Template Tutorial
+name: rh-serverless
+title: Auotscaling serverless applications with Openshift
 version: master
 nav:
   - modules/ROOT/nav.adoc

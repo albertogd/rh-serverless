@@ -1,0 +1,141 @@
+= Auoscaling with Knative
+
+In this exercise,  you’ll install (subscribe) Red Hat Openshift Serverless operator. Then, you’ll deploy a Quarkus application to test serverless autoscaling using Knative Pod Autoscaler (KPA) with a minimum of 0 pods, and scaling based on requests per second.
+
+[#install]
+== Install Red Hat Openshift Serverless
+
+1) Install Red Hat Openshift Serverless operator using the CLI or the https://docs.openshift.com/container-platform/4.6/serverless/installing_serverless/installing-openshift-serverless.html#serverless-install-web-console_installing-openshift-serverless[Web Console].
+
+Go to Operator Hub,  search Red Hat OpenShift Serverless, and install. Keep the default options, click on Install and wait until the installation finishes.
+
+After that, install Knative Serving using the https://docs.openshift.com/container-platform/4.6/serverless/installing_serverless/installing-knative-serving.html#serverless-install-serving-yaml_installing-knative-serving[CLI] or the https://docs.openshift.com/container-platform/4.6/serverless/installing_serverless/installing-knative-serving.html#serverless-install-serving-web-console_installing-knative-serving[Web Console].
+
+Go to Openshift Serverless operator, select knative-serving project, and click on Install Knative Serving. Keep all the default values, and click on Install.
+
+Check the installation finished properly.
+
+[.lines_7]
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc get knativeserving.operator.knative.dev/knative-serving -n knative-serving --template='{{range .status.conditions}}{{printf "%s=%s\n" .type .status}}{{end}}'
+
+DependenciesInstalled=True
+DeploymentsAvailable=True
+InstallSucceeded=True
+Ready=True
+VersionMigrationEligible=True
+----
+
+Download the Kn client for Linux from https://storage.googleapis.com/knative-nightly/client/latest/kn-linux-amd64[here], and save it in any folder of your path (i.e. /usr/local/bin). Check your kn client is working properly, and enable autocompletion for your shell.
+
+[.lines_7]
+[source,bash,subs="+macros,+attributes"]
+----
+$ wget https://storage.googleapis.com/knative-nightly/client/latest/kn-linux-amd64
+sudo mv kn-linux-amd64 /usr/local/bin/kn
+sudo chmod +x /usr/local/bin/kn
+source <(kn completion bash)
+kn version
+----
+
+[#build]
+== Build the Quarkus app
+
+2) Create an image of the Quakus application using the non-native S2I.
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc import-image --confirm openjdk/openjdk-11-rhel7 --from=registry.access.redhat.com/openjdk/openjdk-11-rhel7
+
+$ oc new-build --name quarkus-app openjdk-11-rhel7~https://github.com/albertogd/rh-serverless.git --context-dir=apps/knative/quarkus --to quarkus-app:latest
+
+$ oc get istag
+NAME                     IMAGE REPOSITORY                                                                TAGS          UPDATED
+quarkus-app:latest                   image-registry.openshift-image-registry.svc:5000/demo2/quarkus-app@sha256:dc0b26a669cb483d978b6da83af2d760bbd434e4fe65ffad70085eac642ccba2   39 minutes ago
+----
+
+[IMPORTANT]
+====
+You can build the Quarkus application in a native way to improve much more performance, although building the image may take up to 20 minutes, and consume about 4 GB of memory and 1.5 CPUs.
+
+Use the ImageStream quay.io/quarkus/ubi-quarkus-native-s2i:20.3-java11 to build the Quarkus application in a native way.
+
+*In my tests, using the image built in a native way, creating a pod took around 5 seconds. Using the non-native built image, took around 20 seconds.*
+
+You can try both methods, and configure the knative service with different revisions, one for each build method, and compare.
+====
+
+[#service]
+== Create Knative Service
+
+3) Create a Knative Service for the application using the image you’ve just created using kn. Configure it so it auto scales 1 replica each 5 requests per seconds (i.e. an application receiving 15 requests, should have 3 replicas). Use the following parameters:
+
+* **Service**: quarkus-app 
+* **Revision name**: quarkus-app-v1
+* **Image**: get the ImageStreamTag you created
+* **Scale**:
+** Min: 0
+** Max: 10
+* **Requests**:
+** CPU: 100m
+** Memory: 200Mi
+* **Limits**:
+** CPU: 200m
+** Memory: 400Mi
+* **Autoscale parameters**:
+** Metrics: rps
+** Target: 5
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ kn service create quarkus-app --image $(oc get istag quarkus-app:latest -o jsonpath='{.image.dockerImageReference}') --scale 0..10 --request 'cpu=100m,memory=200Mi' --limit 'cpu=200m,memory=400Mi' --revision-name quarkus-app-v1 --annotation autoscaling.knative.dev/metric="rps" --annotation autoscaling.knative.dev/target="5"
+----
+
+[#autoscale]
+== Autoscaling Quarkus serverless app
+
+4) Check there are no application pods as it’s a serverless app. Get the application route, and do a request. How long does it take to answer the request?  The script [create-replicas-quarkus-app.sh] generates the amount of requests needed so Knative autoscales the app to the replicas you want. Run create-replicas-quarkus-app.sh 2 to generate 2 replicas.
+
+NOTE: You can also use https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64[hey] to generate concurrent request per second
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ time curl -s $(oc get ksvc quarkus-app -o json | jq -r '.status.url') >/dev/null
+curl -s $(oc get ksvc quarkus-app -o json | jq -r '.status.url') > /dev/null  0,01s user 0,01s system 0% cpu 7,176 total
+
+$ wget 
+$ chmod +x ./create-replicas-quarkus-app.sh
+./create-replicas-quarkus-app.sh 2
+Current pod nº: 0
+Current pod nº: 0
+Current pod nº: 0
+Current pod nº: 0
+Current pod nº: 1
+Current pod nº: 2
+Current pod nº: 2
+Current pod nº: 2
+----
+
+Do a single request and check the kpa. After one minute, check the kpa. What is the current status?
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ curl -s $(oc get ksvc quarkus-app -o json | jq -r '.status.url') >/dev/null
+
+$ oc get kpa
+NAME                     DESIREDSCALE   ACTUALSCALE   READY   REASON
+quarkus-app-v1                   1                                 1                   True  
+
+-- After 1 minute...
+
+$ oc get kpa
+NAME               DESIREDSCALE   ACTUALSCALE   READY   REASON
+quarkus-app                0                                 1                   False       NoTraffic
+
+-- After some seconds...
+
+$ oc get kpa
+NAME               DESIREDSCALE   ACTUALSCALE   READY   REASON
+quarkus-app                0                                 0                   False       NoTraffic
+----

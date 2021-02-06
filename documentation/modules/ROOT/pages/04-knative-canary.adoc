@@ -1,0 +1,90 @@
+= Canary deployment with Knative
+
+In this exercise, you’ll deploy a NodeJS application. Then you’ll create a new version of the application using a Canary deployment. You’ll split the traffic between the two application versions, routing only a small percentage to the new version. As this version has some errors, you’ll deploy a third version routing again only a small percentage of the requests there. As this version works properly, you’ll increase the requests up to 100%.
+
+NodeJS application:
+
+* **Name**: nodejs-app
+* **Repo**: https://github.com/albertogd/rh-serverless.git
+* **Branch**: master
+* **Path**:
+** apps/knative/nodejs/v1
+** apps/knative/nodejs/v2
+** apps/knative/nodejs/v3
+
+[#build]
+== Build the three NodeJS app versions
+
+1) Create an image of nodejs application for each version. Use the same name, nodejs-app, but use as tag the version: nodejs-app:v1, nodejs-app:v2, nodejs-app:v3.
+
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc new-build --name nodejs-app-v1 https://github.com/albertogd/rh-serverless.git --context-dir=apps/knative/nodejs/v1 --to nodejs-app:v1
+
+$ oc new-build --name nodejs-app-v2 https://github.com/albertogd/rh-serverless.git --context-dir=apps/knative/nodejs/v2 --to nodejs-app:v2
+
+$ oc new-build --name nodejs-app-v3 https://github.com/albertogd/rh-serverless.git --context-dir=apps/knative/nodejs/v3 --to nodejs-app:v3
+
+$ oc get istag
+NAME            IMAGE REFERENCE                                   
+nodejs-app:v1   image-registry.openshift-image-registry.svc:5000/nodejs/nodejs-app@sha256:171b8992307e37c75247c8c0e66ee1d72a66c53dd876863553ead6188c0a0a4e
+nodejs-app:v2   image-registry.openshift-image-registry.svc:5000/nodejs/nodejs-app@sha256:29ceb00d1c3a7f1613ad5f2e9f4be1782c5dbdb7d447f6ed1ea41f10e0fa8581 
+nodejs-app:v3   image-registry.openshift-image-registry.svc:5000/nodejs/nodejs-app@sha256:e98a49f3f5a9a12fd87e629c794977d01b2049161308234609ae3d9c9f377ea9 
+----
+
+[#service]
+== Create Knative Service
+
+2) Create a knative service, name it nodejs-app, and use the image nodejs-app:v1 you have just created. Set the revision as nodejs-app-v1. Test the application is working.
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ kn service create nodejs-app --image $(oc get istag nodejs-app:v1 -o jsonpath='{.image.dockerImageReference}')  --revision-name nodejs-app-v1
+----
+
+[#version2]
+== Update app to v2 using a canary deployment
+
+3) We need to release the app version 2. As we want to minimize the downtime in case of a failure in the new version, update the service using the image of the version 2 doing a Canary deployment, sending just the 10% of the requests to the new version. Name this revision as nodejs-app-v2. 
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ kn service update nodejs-app --image $(oc get istag nodejs-app:v2 -o jsonpath='{.image.dockerImageReference}') --revision-name nodejs-app-v2 --traffic  nodejs-app-v1=90 --traffic nodejs-app-v2=10
+----
+
+Run the script test-nodejs-app.sh to test the application. What is the affection of this wrong new version?
+
+====
+++++
+<style>
+.doc .imageblock { align-items: unset; }
+</style>
+++++
+As only the 10% of the requests are sent to version 2, the affection is just the 10%.
+
+image::canaray-deployment-v2.png[]
+====
+
+[#version3]
+== Update app to v3 using a canary deployment
+
+4) Update the service to use the image v3, and send the 10% of the requests to version 3, and the 90% to version 1. Don’t send any traffic to version 2 as it’s a bug version. Run again the test-nodejs-app.sh. What is the service affection now?
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ kn service update nodejs-app --image $(oc get istag nodejs-app:v3 -o jsonpath='{.image.dockerImageReference}') --revision-name nodejs-app-v3 --traffic  nodejs-app-v1=90 --traffic nodejs-app-v3=10
+----
+
+====
+Now there is no service affection.
+
+image::canaray-deployment-v3.png[.doc.imageblock { align-items: unset; }]
+====
+
+As version 3 is properly released, you can send the 100% of the traffic to version 3.
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ kn service update nodejs-app --traffic  nodejs-app-v3=100
+----

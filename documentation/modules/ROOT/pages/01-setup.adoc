@@ -2,28 +2,19 @@
 include::_attributes.adoc[]
 
 [#prerequisite]
-== Prerequisite CLI tools
+== Prerequisites
 
-include::https://raw.githubusercontent.com/redhat-developer-demos/rhd-tutorial-common/master/prerequisites-kubernetes.adoc[]
-|===
+For this lab you need an Openshift 4 cluster with cluster-admin privileges. You can create an Openshift 4 Cluster in QuickLab. Go to https://quicklab.upshift.redhat.com[https://quicklab.upshift.redhat.com], and click in New Cluster. Use openshift4upi template, and the region you want. Use 1 master and 2 workers.
 
-include::https://raw.githubusercontent.com/redhat-developer-demos/rhd-tutorial-common/master/optional-requisites.adoc[]
-|===
+NOTE: You need to be logged in Red Hat VPN to access quicklab
 
-[#minikube]
-== Setup Kubernetes
+NOTE: Red Hat Openshift Serverless and Knative CLI is installed in Exercise 2
 
-:profile: my_profile
+++++
+<style>
+.doc .imageblock { align-items: unset; }
+</style>
+++++
+As only the 10% of the requests are sent to version 2, the affection is just the 10%.
 
-include::https://raw.githubusercontent.com/redhat-developer-demos/rhd-tutorial-common/master/kubernetes-setup.adoc[]
-
-And then you are ready for start using Kubernetes:
-
-image::kubelogo.png[]
-
-[#downloadtutorial]
-== Get tutorial sources
-
-:tutorial-url: https://github.com/redhat-developer-demos/rhd-tutorial-common.git
-:folder: my_folder
-include::https://raw.githubusercontent.com/redhat-developer-demos/rhd-tutorial-common/master/download-sources.adoc[]
+image::quicklab.png[]

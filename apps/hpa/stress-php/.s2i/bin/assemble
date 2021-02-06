@@ -1,0 +1,14 @@
+#!/bin/bash -e
+
+/usr/libexec/s2i/assemble
+
+rc=$?
+
+if [ $rc -eq 0 ]; then
+	echo "TimeOut 300" >> /opt/app-root/etc/conf.d/10-timeout.conf
+	echo "Customizing Apache Timeout to 300s"
+else
+	echo "Error: assemble failed!"
+fi
+
+exit $rc

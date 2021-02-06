@@ -1,0 +1,261 @@
+= Horizontal Pod Autoscaler
+
+In this exercise, you will create two simple applications to simulate CPU and Memory load to test application autoscaling using Horizontal Pod Autoscaler.
+
+[#applications]
+== Create PHP and Python applications
+
+1) Create two applications using S2I and expose the applications.
+
+PHP application:
+
+- *Name*: stress-php
+- *Repo*: https://github.com/albertogd/rh-serverless.git
+- *Branch*: master
+- *Path*: apps/hpa/stress-php
+
+Python application:
+
+- Name: stress-python
+- Repo: https://github.com/albertogd/rh-serverless.git
+- Branch: master
+- Path: apps/hpa/stress-python
+
+[.lines_7]
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc new-app https://github.com/albertogd/rh-serverles --context-dir apps/hpa/stress-php --name stress-php
+$ oc new-app https://github.com/albertogd/rh-serverless --context-dir apps/hpa/stress-python --name stress-python
+$ oc expose svc/stress-php
+$ oc expose svc/stress-python
+----
+
+[#requests]
+== Configure requests and limits
+
+2) Configure the applications with a request of cpu = 200m and memory = 200M, and a limit of cpu = 400m and memory = 200M.
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc set resources deployment/stress-php --requests=cpu=200m,memory=200M --limits=cpu=400m,memory=400M
+$ oc set resources deployment/stress-python --requests=cpu=200m,memory=200M --limits=cpu=400m,memory=400M
+----
+
+Check the requests and limits configured:
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc describe deployment/stress-php | grep -A2 "Request\|Limit"
+    Limits:
+      cpu:     400m
+      memory:  400M
+    Requests:
+      cpu:        200m
+      memory:     200M
+$ oc describe deployment/stress-python | grep -A2 "Request\|Limit"
+    Limits:
+      cpu:     400m
+      memory:  400M
+    Requests:
+      cpu:        200m
+      memory:     200M
+----
+
+As default route timeout is 30 seconds, add an annotation to the route to increase timeout to 5 min.
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc annotate route stress-php haproxy.router.openshift.io/timeout=300s --overwrite
+oc annotate route stress-python haproxy.router.openshift.io/timeout=300s --overwrite
+----
+
+HorizontalPodAutoscaler depends on metrics, so your cluster must have metrics configured. Use oc get PodMetrics command to determine if metrics are configured
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc describe PodMetrics test-hpa | grep "Cpu\|Memory"
+    Cpu:     0
+    Memory:  26840Ki
+
+$ oc get PodMetrics
+NAME                                   CPU      MEMORY          WINDOW
+stress-php-787bc8b45b-jwc2r            2m       33256Ki          5m0s
+stress-python-2c4bc3d42b-f31da         4m       28150Ki          5m0s
+----
+
+[#cpu]
+== CPU Autoscaling
+
+3) In this part you’ll test CPU autoscale. Create a HPA with a minimum of 1 pod, a maximum of 10 pods, and a cpu percent of 50%.
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc autoscale deployment/stress-php --min=1 --max=10 --cpu-percent=50
+$ oc autoscale deployment/stress-python --min=1 --max=10 --cpu-percent=50
+----
+
+HPA will maintain an average CPU utilization across all Pods of 50% (since each pod requests 200 milli-cores), this means average CPU usage of 100 milli-cores.
+
+Wait a couple of minutes for HPA to gather metrics of the application, and check hpa status until Target is defined.
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc get hpa
+NAME                REFERENCE                        TARGETS      MINPODS  MAXPODS  REPLICAS   AGE
+stress-php         Deployment/stress-php         <unknown>/50%          1               10           0              8s
+stress-python   Deployment/stress-python   <unknown>/50%          1               10           0              4s
+…
+
+NAME                REFERENCE                      TARGETS     MINPODS    MAXPODS   REPLICAS   AGE
+stress-php        Deployment/stress-php              3%/50%           1                 10                   0              3m
+stress-python   Deployment/stress-python       3%/50%           1                 10                   0              3m
+----
+
+The PHP application has an endpoint cpu.php?minutes=X to simulate a load during the defined time. Get each application route, and make a request for 2 minute. You can use your web browser to make the request, as it generates an output:
+
+The Python application has an endpoint  /cpu/<minutes>. Make the request using curl as it returns an empty response:
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ curl http://$(oc get route stress-python -o json | jq -r '.spec.host')/cpu/2
+----
+
+In another terminal, check with PodMetrics the current CPU load, the hpa and the number of pods. 
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc get PodMetrics
+NAME                                                    CPU        MEMORY     WINDOW
+stress-php-787bc8b45b-jwc2r         398m       33256Ki          5m0s
+
+$ oc get hpa
+NAME       REFERENCE                         TARGETS     MINPODS   MAXPODS   REPLICAS   AGE
+stress-php   Deployment/stress-php         199%/50%            1                     10                    4             2d21h
+
+$ oc get pods  --field-selector status.phase=Running -o name | wc -l
+4
+
+$ oc get PodMetrics
+NAME                                  CPU       MEMORY       WINDOW
+stress-php-787bc8b45b-jwc2r           2m       33256Ki        5m0s
+stress-php-787bc8b45b-p86p6           2m       28852Ki        5m0s
+stress-php-787bc8b45b-qlm72           2m       29004Ki        5m0s
+stress-php-787bc8b45b-sbvxz          399m      40944Ki        5m0s
+----
+
+Can you explain the CPU and the increase (nº of replicas)?
+
+====
+We configured a CPU limit of 400m, so this is the maximum that our pod is going to use. The targetCPUUtilizationPercentage was configured to 50% of the request (200m), so for each 100m used, a new pod will be created.
+
+
+[cols="^60%,^40%" width="40%"]
+|===
+|TARGET|PODS 
+
+|0-49% / 50%
+|1
+
+|50%-99% / 50%
+|2
+
+|100% - 149% / 50%
+|3
+
+|150% - 199% / 50%
+|4
+|===
+
+====
+
+[#memory]
+== Memory Autoscaling
+
+4) Now we’ll test autoscale using memory metrics. This feature is TP in Openshift, and unlike CPU-based autoscaling, memory-based autoscaling requires specifying the autoscaler using YAML instead of using the oc autoscale command.
+
+Delete the HPAs created before, and create a new one using oc apply -f with this manifest:
+
+[source,yaml,subs="+macros,+attributes"]
+----
+apiVersion: autoscaling/v2beta2 
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-test-memory 
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1 
+    kind: Deployment 
+    name: test-hpa 
+  minReplicas: 1 
+  maxReplicas: 10 
+  metrics: 
+  - type: Resource
+    resource:
+      name: memory 
+      target:
+        type: Utilization 
+        averageUtilization: 50
+----
+
+The PHP application has an endpoint memory.php?size=X&minutes=Y (size in MB) to simulate memory load during the defined time. The Python app has an endpoint /memory/200/2.
+Get the application route, and make a request of 200 MB for 2 minute. After 2 minutes, you’ll receive an empty reply from the server (you can also run in the background the curl).
+
+For PHP application:
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ curl http://$(oc get route stress-php -o json | jq -r '.spec.host')/memory.php?memory=200&minutes=2
+----
+
+For Python application:
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ curl http://$(oc get route stress-php -o json | jq -r '.spec.host')/memory/200/2
+----
+
+In another terminal, check with PodMetrics the current CPU load, the hpa and the number of pods.
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc describe PodMetrics test-hpa | grep "Memory"
+    Memory:     230532Ki
+
+$ oc get hpa
+NAME              REFERENCE             TARGETS                 MINPODS   MAXPODS   REPLICAS   AGE
+hpa-test-memory   Deployment/test-hpa   120%/50%       1                     10                    3                11m
+
+$ oc get pods  --field-selector status.phase=Running -o name | wc -l
+3
+----
+
+Make a request of 500 MB for 2 minute. Can you explain what’s happening now and what’s the difference before and now?
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ curl http://$(oc get route -o json | jq -r '.items[0].spec.host')/memory/500/2
+<html><body><h1>502 Bad Gateway</h1>
+The server returned an invalid or incomplete response.
+</body></html>
+----
+
+====
+We configured a Memory limit of 400M, so when the application tried to use 500M, it failed. We get an error from the application.
+
+Before we had a Utilization of 50%, and the memory request of the POD was 200M. As we did a request of 200M, plus the 20 MB that the container uses, we used around 220M. 220/100 is a target of 120%,  so the hpa added 2 more replicas:
+
+[cols="^60%,^40%" width="40%"]
+|===
+|TARGET|PODS 
+
+|0-49% / 50%
+|1
+
+|50%-99% / 50%
+|2
+
+|100% - 149% / 50%
+|3
+|===
+
+====

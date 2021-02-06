@@ -1,20 +1,29 @@
-= Welcome to Template Tutorial
-:page-layout: home
-:!sectids:
+= Autoscaling Serverless Application in Openshift
+//:page-layout: home
+//:!sectids:
 
 [.text-center.strong]
-== Publish Services to Kubernetes
+== Introduction
 
-A Kubernetes tutorial to show how you can deploy a Java service to a Kubernetes cluster as it was a child game.
+**Autoscaling serverless applications in Openshift** is a workshop to get familiar with autoscaling and Knative in Openshift. You'll start creating a Horizontal Pod Autoscaler to autoscale based on CPU and Memory utilization. Then, you'll create a Quarkus serverless application using Knative. Finally, you'll release a new version of an application using a canary deployment routing only a small amount of traffic.
 
 [.tiles.browse]
-== Browse modules
+== Exercises
 
-[.tile]
-.xref:01-setup.adoc[Get Started]
-* xref:01-setup.adoc#minikube[Minikube]
+=== 1. Horizontal Pod Autoscaler
 
-[.tile]
-.xref:02-deploy.adoc[Deploying]
-* xref:02-deploy.adoc#package[Package the Application]
-* xref:02-deploy.adoc#deploy[Deploy the Application]
+Autoscale a PHP and a Python application based on CPU and Memory utilization.
+
+xref:02-hpa.adoc[Start]
+
+=== 2. Autoscale Serverless applications with Knative
+
+Autoscale a Quarkus serverless application based on Requests per second.
+
+xref:03-knative-scale.adoc[Start]
+
+=== 3. Canary deployment with Knative
+
+Route only a small part of the traffic to the new application version. Once you are confident that your new application version is working properly, route the 100% of the traffic to the new version. 
+
+xref:04-knative-canary.adoc[Start]

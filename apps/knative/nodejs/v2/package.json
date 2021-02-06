@@ -1,0 +1,27 @@
+{
+  "name": "nodejs-basic",
+  "version": "0.0.1",
+  "description": "Node.js test application for Serverless workshop using OpenShift 4",
+  "main": "server.js",
+  "dependencies": {
+    "chai": "^3.5.0",
+    "chai-http": "^2.0.1",
+    "ejs": "^2.4.1",
+    "express": "^4.17.1"
+  },
+  "engine": {
+    "node": "*",
+    "npm": "*"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/albertogd/rh-workshops.git",
+    "directory": "knative/nodejs-v1"
+  },
+  "author": "Alberto Gonzalez de Dios <algonzal@redhat.com>",
+  "license": "Apache License 2.0",
+  "homepage": "https://github.com/albertogd/rh-workshops"
+}
