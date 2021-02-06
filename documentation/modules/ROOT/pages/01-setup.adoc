@@ -15,6 +15,5 @@ NOTE: Red Hat Openshift Serverless and Knative CLI is installed in Exercise 2
 .doc .imageblock { align-items: unset; }
 </style>
 ++++
-As only the 10% of the requests are sent to version 2, the affection is just the 10%.
 
 image::quicklab.png[]

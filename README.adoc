@@ -1,1 +1,24 @@
-Check the build courseware https://redhat-scholars.github.io/build-course[documentation]  on how folder structure, how to use macros and other gotchas
+# Autoscaling serverless applications in Openshift
+
+## Introduction
+Autoscaling serverless applications in Openshift is a workshop to get familiar with autoscaling and Knative in Openshift. You'll start creating a Horizontal Pod Autoscaler to autoscale based on CPU and Memory utilization. Then, you'll create a Quarkus serverless application using Knative. Finally, you'll release a new version of an application using a canary deployment routing only a small amount of traffic.
+
+## Exercises
+
+### 1. Horizontal Pod Autoscaler
+
+Autoscale a PHP and a Python application based on CPU and Memory utilization.
+
+### 2. Autoscale Serverless applications with Knative
+
+Autoscale a Quarkus serverless application based on Requests per second.
+
+### 3. Canary deployment with Knative
+
+Route only a small part of the traffic to the new application version. Once you are confident that your new application version is working properly, route the 100% of the traffic to the new version. 
+
+## Author Information
+
+Alberto Gonzalez de Dios @Red Hat
+
+algonzal@redhat.com
