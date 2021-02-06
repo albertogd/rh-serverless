@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Horizontal Pod Autoscaler :: Autoscaling serverless applications with Openshift</title>
+    <link rel="canonical" href="https://redhat-scholars.github.io/course-template/rh-serverless/02-hpa.html">
+    <link rel="prev" href="01-setup.html">
+    <link rel="next" href="03-knative-scale.html">
+    <meta name="generator" content="Antora 2.3.4">
+    <link rel="stylesheet" href="../_/css/site.css">
+<link rel="icon" href="../_/img/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://developers.redhat.com" target="_blank"><img
+          src="../_/img/header_logo.png" height="40px" alt="Red Hat Developer Program"></a>
+      <a class="navbar-item" href="https://redhat-scholars.github.io/course-template">Autoscaling serverless applications with Openshift</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="#">Books</a>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">CheatSheets</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="#">CheatSheet A</a>
+            <a class="navbar-item" href="#">CheatSheet B</a>
+            <a class="navbar-item" href="#">CheatSheet C</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Upcoming Events</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="#">Event A</a>
+            <a class="navbar-item" href="#">Event B</a>
+            <a class="navbar-item" href="#">Event C</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">More Tutorials</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="#">Tutorial A</a>
+            <a class="navbar-item" href="#">Tutorial B</a>
+            <a class="navbar-item" href="#">Tutorial C</a>
+          </div>
+        </div>
+        <div class="navbar-item">
+          <span class="control">
+            <a class="button is-primary" href="#">Download</a>
+          </span>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="rh-serverless" data-version="master">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="index.html">Auotscaling serverless applications with Openshift</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="01-setup.html">1. Setup</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="01-setup.html#prerequisite">Prerequisites</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="01-setup.html#minikube">Setup Minikube</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="02-hpa.html">2. Horizontal Pod Autoscaler</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="#applications">2.1 Create PHP and Python Applications</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="#requests">2.2 Configure requests and limits</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="#cpu">2.3 CPU autoscaling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="#memory">2.4 Memory autoscaling</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="03-knative-scale.html">3. Autoscaling serverless applications</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-knative-scale.html#install">3.1 Install Red Hat Openshift Serverles</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-knative-scale.html#build">3.2 Build a Quarkus application</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-knative-scale.html#service">3.3 Create a Knative Service</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-knative-scale.html#autoscale">3.4 Autoscale the Quarkus application</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="04-knative-canary.html">4. Canary deployment of a serverless application</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-knative-canary.html#build">4.1 Build three NodeJS applications</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-knative-canary.html#service">4.2 Create a Knative Service</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-knative-canary.html#version2">4.3 Release app version 2</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="04-knative-canary.html#version3">4.4 Release app version 3</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Auotscaling serverless applications with Openshift</span>
+    <span class="version">master</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <span class="title">Auotscaling serverless applications with Openshift</span>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="index.html">master</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="index.html">Auotscaling serverless applications with Openshift</a></li>
+    <li><a href="02-hpa.html">2. Horizontal Pod Autoscaler</a></li>
+  </ul>
+</nav>
+  <div class="edit-this-page"><a href="https://github.com/albertogd/rh-serverless/edit/master/documentation/modules/ROOT/pages/02-hpa.adoc">Edit this Page</a></div>
+  </div>
+  <div class="content">
+<article class="doc">
+<h1 class="page">Horizontal Pod Autoscaler</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>In this exercise, you will create two simple applications to simulate CPU and Memory load to test application autoscaling using Horizontal Pod Autoscaler.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="applications"><a class="anchor" href="#applications"></a>Create PHP and Python applications</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>1) Create two applications using S2I and expose the applications.</p>
+</div>
+<div class="paragraph">
+<p>PHP application:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Name</strong>: stress-php</p>
+</li>
+<li>
+<p><strong>Repo</strong>: <a href="https://github.com/albertogd/rh-serverless.git" class="bare">https://github.com/albertogd/rh-serverless.git</a></p>
+</li>
+<li>
+<p><strong>Branch</strong>: master</p>
+</li>
+<li>
+<p><strong>Path</strong>: apps/hpa/stress-php</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Python application:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Name: stress-python</p>
+</li>
+<li>
+<p>Repo: <a href="https://github.com/albertogd/rh-serverless.git" class="bare">https://github.com/albertogd/rh-serverless.git</a></p>
+</li>
+<li>
+<p>Branch: master</p>
+</li>
+<li>
+<p>Path: apps/hpa/stress-python</p>
+</li>
+</ul>
+</div>
+<div class="listingblock lines_7">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc new-app <a href="https://github.com/albertogd/rh-serverles" class="bare">https://github.com/albertogd/rh-serverles</a> --context-dir apps/hpa/stress-php --name stress-php
+$ oc new-app <a href="https://github.com/albertogd/rh-serverless" class="bare">https://github.com/albertogd/rh-serverless</a> --context-dir apps/hpa/stress-python --name stress-python
+$ oc expose svc/stress-php
+$ oc expose svc/stress-python</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="requests"><a class="anchor" href="#requests"></a>Configure requests and limits</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>2) Configure the applications with a request of cpu = 200m and memory = 200M, and a limit of cpu = 400m and memory = 200M.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc set resources deployment/stress-php --requests=cpu=200m,memory=200M --limits=cpu=400m,memory=400M
+$ oc set resources deployment/stress-python --requests=cpu=200m,memory=200M --limits=cpu=400m,memory=400M</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Check the requests and limits configured:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc describe deployment/stress-php | grep -A2 "Request\|Limit"
+    Limits:
+      cpu:     400m
+      memory:  400M
+    Requests:
+      cpu:        200m
+      memory:     200M
+$ oc describe deployment/stress-python | grep -A2 "Request\|Limit"
+    Limits:
+      cpu:     400m
+      memory:  400M
+    Requests:
+      cpu:        200m
+      memory:     200M</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As default route timeout is 30 seconds, add an annotation to the route to increase timeout to 5 min.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc annotate route stress-php haproxy.router.openshift.io/timeout=300s --overwrite
+oc annotate route stress-python haproxy.router.openshift.io/timeout=300s --overwrite</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>HorizontalPodAutoscaler depends on metrics, so your cluster must have metrics configured. Use oc get PodMetrics command to determine if metrics are configured</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc describe PodMetrics test-hpa | grep "Cpu\|Memory"
+    Cpu:     0
+    Memory:  26840Ki
+
+$ oc get PodMetrics
+NAME                                   CPU      MEMORY          WINDOW
+stress-php-787bc8b45b-jwc2r            2m       33256Ki          5m0s
+stress-python-2c4bc3d42b-f31da         4m       28150Ki          5m0s</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="cpu"><a class="anchor" href="#cpu"></a>CPU Autoscaling</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>3) In this part you’ll test CPU autoscale. Create a HPA with a minimum of 1 pod, a maximum of 10 pods, and a cpu percent of 50%.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc autoscale deployment/stress-php --min=1 --max=10 --cpu-percent=50
+$ oc autoscale deployment/stress-python --min=1 --max=10 --cpu-percent=50</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>HPA will maintain an average CPU utilization across all Pods of 50% (since each pod requests 200 milli-cores), this means average CPU usage of 100 milli-cores.</p>
+</div>
+<div class="paragraph">
+<p>Wait a couple of minutes for HPA to gather metrics of the application, and check hpa status until Target is defined.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get hpa
+NAME                REFERENCE                        TARGETS      MINPODS  MAXPODS  REPLICAS   AGE
+stress-php         Deployment/stress-php         &lt;unknown&gt;/50%          1               10           0              8s
+stress-python   Deployment/stress-python   &lt;unknown&gt;/50%          1               10           0              4s
+…
+
+NAME                REFERENCE                      TARGETS     MINPODS    MAXPODS   REPLICAS   AGE
+stress-php        Deployment/stress-php              3%/50%           1                 10                   0              3m
+stress-python   Deployment/stress-python       3%/50%           1                 10                   0              3m</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The PHP application has an endpoint cpu.php?minutes=X to simulate a load during the defined time. Get each application route, and make a request for 2 minute. You can use your web browser to make the request, as it generates an output:</p>
+</div>
+<div class="paragraph">
+<p>The Python application has an endpoint  /cpu/&lt;minutes&gt;. Make the request using curl as it returns an empty response:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl <a href="http://$(oc" class="bare">http://$(oc</a> get route stress-python -o json | jq -r '.spec.host')/cpu/2</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In another terminal, check with PodMetrics the current CPU load, the hpa and the number of pods.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get PodMetrics
+NAME                                                    CPU        MEMORY     WINDOW
+stress-php-787bc8b45b-jwc2r         398m       33256Ki          5m0s
+
+$ oc get hpa
+NAME       REFERENCE                         TARGETS     MINPODS   MAXPODS   REPLICAS   AGE
+stress-php   Deployment/stress-php         199%/50%            1                     10                    4             2d21h
+
+$ oc get pods  --field-selector status.phase=Running -o name | wc -l
+4
+
+$ oc get PodMetrics
+NAME                                  CPU       MEMORY       WINDOW
+stress-php-787bc8b45b-jwc2r           2m       33256Ki        5m0s
+stress-php-787bc8b45b-p86p6           2m       28852Ki        5m0s
+stress-php-787bc8b45b-qlm72           2m       29004Ki        5m0s
+stress-php-787bc8b45b-sbvxz          399m      40944Ki        5m0s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Can you explain the CPU and the increase (nº of replicas)?</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>We configured a CPU limit of 400m, so this is the maximum that our pod is going to use. The targetCPUUtilizationPercentage was configured to 50% of the request (200m), so for each 100m used, a new pod will be created.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 40%;">
+<colgroup>
+<col style="width: 60%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-top">TARGET</th>
+<th class="tableblock halign-center valign-top">PODS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">0-49% / 50%</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">50%-99% / 50%</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">2</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">100% - 149% / 50%</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">3</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">150% - 199% / 50%</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">4</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="memory"><a class="anchor" href="#memory"></a>Memory Autoscaling</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>4) Now we’ll test autoscale using memory metrics. This feature is TP in Openshift, and unlike CPU-based autoscaling, memory-based autoscaling requires specifying the autoscaler using YAML instead of using the oc autoscale command.</p>
+</div>
+<div class="paragraph">
+<p>Delete the HPAs created before, and create a new one using oc apply -f with this manifest:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-test-memory
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: test-hpa
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 50</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The PHP application has an endpoint memory.php?size=X&amp;minutes=Y (size in MB) to simulate memory load during the defined time. The Python app has an endpoint /memory/200/2.
+Get the application route, and make a request of 200 MB for 2 minute. After 2 minutes, you’ll receive an empty reply from the server (you can also run in the background the curl).</p>
+</div>
+<div class="paragraph">
+<p>For PHP application:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl <a href="http://$(oc" class="bare">http://$(oc</a> get route stress-php -o json | jq -r '.spec.host')/memory.php?memory=200&amp;minutes=2</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For Python application:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl <a href="http://$(oc" class="bare">http://$(oc</a> get route stress-php -o json | jq -r '.spec.host')/memory/200/2</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In another terminal, check with PodMetrics the current CPU load, the hpa and the number of pods.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc describe PodMetrics test-hpa | grep "Memory"
+    Memory:     230532Ki
+
+$ oc get hpa
+NAME              REFERENCE             TARGETS                 MINPODS   MAXPODS   REPLICAS   AGE
+hpa-test-memory   Deployment/test-hpa   120%/50%       1                     10                    3                11m
+
+$ oc get pods  --field-selector status.phase=Running -o name | wc -l
+3</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Make a request of 500 MB for 2 minute. Can you explain what’s happening now and what’s the difference before and now?</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl <a href="http://$(oc" class="bare">http://$(oc</a> get route -o json | jq -r '.items[0].spec.host')/memory/500/2
+&lt;html&gt;&lt;body&gt;&lt;h1&gt;502 Bad Gateway&lt;/h1&gt;
+The server returned an invalid or incomplete response.
+&lt;/body&gt;&lt;/html&gt;</code></pre>
+</div>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>We configured a Memory limit of 400M, so when the application tried to use 500M, it failed. We get an error from the application.</p>
+</div>
+<div class="paragraph">
+<p>Before we had a Utilization of 50%, and the memory request of the POD was 200M. As we did a request of 200M, plus the 20 MB that the container uses, we used around 220M. 220/100 is a target of 120%,  so the hpa added 2 more replicas:</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 40%;">
+<colgroup>
+<col style="width: 60%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-top">TARGET</th>
+<th class="tableblock halign-center valign-top">PODS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">0-49% / 50%</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">50%-99% / 50%</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">2</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">100% - 149% / 50%</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">3</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="01-setup.html">1. Setup</a></span>
+  <span class="next"><a href="03-knative-scale.html">3. Autoscaling serverless applications</a></span>
+</nav>
+</article>
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <a class="rhd-logo" href="https://developers.redhat.com" target="_blank"></div>
+</footer>
+<script src="../_/js/vendor/clipboard.js"></script>
+<script src="../_/js/site.js"></script>
+<script async src="../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

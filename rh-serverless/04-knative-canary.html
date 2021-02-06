@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Canary deployment with Knative :: Autoscaling serverless applications with Openshift</title>
+    <link rel="canonical" href="https://redhat-scholars.github.io/course-template/rh-serverless/04-knative-canary.html">
+    <link rel="prev" href="03-knative-scale.html">
+    <meta name="generator" content="Antora 2.3.4">
+    <link rel="stylesheet" href="../_/css/site.css">
+<link rel="icon" href="../_/img/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://developers.redhat.com" target="_blank"><img
+          src="../_/img/header_logo.png" height="40px" alt="Red Hat Developer Program"></a>
+      <a class="navbar-item" href="https://redhat-scholars.github.io/course-template">Autoscaling serverless applications with Openshift</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="#">Books</a>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">CheatSheets</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="#">CheatSheet A</a>
+            <a class="navbar-item" href="#">CheatSheet B</a>
+            <a class="navbar-item" href="#">CheatSheet C</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Upcoming Events</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="#">Event A</a>
+            <a class="navbar-item" href="#">Event B</a>
+            <a class="navbar-item" href="#">Event C</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">More Tutorials</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="#">Tutorial A</a>
+            <a class="navbar-item" href="#">Tutorial B</a>
+            <a class="navbar-item" href="#">Tutorial C</a>
+          </div>
+        </div>
+        <div class="navbar-item">
+          <span class="control">
+            <a class="button is-primary" href="#">Download</a>
+          </span>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="rh-serverless" data-version="master">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="index.html">Auotscaling serverless applications with Openshift</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="01-setup.html">1. Setup</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="01-setup.html#prerequisite">Prerequisites</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="01-setup.html#minikube">Setup Minikube</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="02-hpa.html">2. Horizontal Pod Autoscaler</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="02-hpa.html#applications">2.1 Create PHP and Python Applications</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="02-hpa.html#requests">2.2 Configure requests and limits</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="02-hpa.html#cpu">2.3 CPU autoscaling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="02-hpa.html#memory">2.4 Memory autoscaling</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="03-knative-scale.html">3. Autoscaling serverless applications</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-knative-scale.html#install">3.1 Install Red Hat Openshift Serverles</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-knative-scale.html#build">3.2 Build a Quarkus application</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-knative-scale.html#service">3.3 Create a Knative Service</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="03-knative-scale.html#autoscale">3.4 Autoscale the Quarkus application</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="04-knative-canary.html">4. Canary deployment of a serverless application</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="#build">4.1 Build three NodeJS applications</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="#service">4.2 Create a Knative Service</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="#version2">4.3 Release app version 2</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="#version3">4.4 Release app version 3</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Auotscaling serverless applications with Openshift</span>
+    <span class="version">master</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <span class="title">Auotscaling serverless applications with Openshift</span>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="index.html">master</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="index.html">Auotscaling serverless applications with Openshift</a></li>
+    <li><a href="04-knative-canary.html">4. Canary deployment of a serverless application</a></li>
+  </ul>
+</nav>
+  <div class="edit-this-page"><a href="https://github.com/albertogd/rh-serverless/edit/master/documentation/modules/ROOT/pages/04-knative-canary.adoc">Edit this Page</a></div>
+  </div>
+  <div class="content">
+<article class="doc">
+<h1 class="page">Canary deployment with Knative</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>In this exercise, you’ll deploy a NodeJS application. Then you’ll create a new version of the application using a Canary deployment. You’ll split the traffic between the two application versions, routing only a small percentage to the new version. As this version has some errors, you’ll deploy a third version routing again only a small percentage of the requests there. As this version works properly, you’ll increase the requests up to 100%.</p>
+</div>
+<div class="paragraph">
+<p>NodeJS application:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Name</strong>: nodejs-app</p>
+</li>
+<li>
+<p><strong>Repo</strong>: <a href="https://github.com/albertogd/rh-serverless.git" class="bare">https://github.com/albertogd/rh-serverless.git</a></p>
+</li>
+<li>
+<p><strong>Branch</strong>: master</p>
+</li>
+<li>
+<p><strong>Path</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>apps/knative/nodejs/v1</p>
+</li>
+<li>
+<p>apps/knative/nodejs/v2</p>
+</li>
+<li>
+<p>apps/knative/nodejs/v3</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="build"><a class="anchor" href="#build"></a>Build the three NodeJS app versions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>1) Create an image of nodejs application for each version. Use the same name, nodejs-app, but use as tag the version: nodejs-app:v1, nodejs-app:v2, nodejs-app:v3.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc new-build --name nodejs-app-v1 <a href="https://github.com/albertogd/rh-serverless.git" class="bare">https://github.com/albertogd/rh-serverless.git</a> --context-dir=apps/knative/nodejs/v1 --to nodejs-app:v1
+
+$ oc new-build --name nodejs-app-v2 <a href="https://github.com/albertogd/rh-serverless.git" class="bare">https://github.com/albertogd/rh-serverless.git</a> --context-dir=apps/knative/nodejs/v2 --to nodejs-app:v2
+
+$ oc new-build --name nodejs-app-v3 <a href="https://github.com/albertogd/rh-serverless.git" class="bare">https://github.com/albertogd/rh-serverless.git</a> --context-dir=apps/knative/nodejs/v3 --to nodejs-app:v3
+
+$ oc get istag
+NAME            IMAGE REFERENCE
+nodejs-app:v1   image-registry.openshift-image-registry.svc:5000/nodejs/nodejs-app@sha256:171b8992307e37c75247c8c0e66ee1d72a66c53dd876863553ead6188c0a0a4e
+nodejs-app:v2   image-registry.openshift-image-registry.svc:5000/nodejs/nodejs-app@sha256:29ceb00d1c3a7f1613ad5f2e9f4be1782c5dbdb7d447f6ed1ea41f10e0fa8581
+nodejs-app:v3   image-registry.openshift-image-registry.svc:5000/nodejs/nodejs-app@sha256:e98a49f3f5a9a12fd87e629c794977d01b2049161308234609ae3d9c9f377ea9</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="service"><a class="anchor" href="#service"></a>Create Knative Service</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>2) Create a knative service, name it nodejs-app, and use the image nodejs-app:v1 you have just created. Set the revision as nodejs-app-v1. Test the application is working.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ kn service create nodejs-app --image $(oc get istag nodejs-app:v1 -o jsonpath='{.image.dockerImageReference}')  --revision-name nodejs-app-v1</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="version2"><a class="anchor" href="#version2"></a>Update app to v2 using a canary deployment</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>3) We need to release the app version 2. As we want to minimize the downtime in case of a failure in the new version, update the service using the image of the version 2 doing a Canary deployment, sending just the 10% of the requests to the new version. Name this revision as nodejs-app-v2.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ kn service update nodejs-app --image $(oc get istag nodejs-app:v2 -o jsonpath='{.image.dockerImageReference}') --revision-name nodejs-app-v2 --traffic  nodejs-app-v1=90 --traffic nodejs-app-v2=10</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Run the script test-nodejs-app.sh to test the application. What is the affection of this wrong new version?</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<style>
+.doc .imageblock { align-items: unset; }
+</style>
+<div class="paragraph">
+<p>As only the 10% of the requests are sent to version 2, the affection is just the 10%.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="_images/canaray-deployment-v2.png" alt="canaray deployment v2">
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="version3"><a class="anchor" href="#version3"></a>Update app to v3 using a canary deployment</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>4) Update the service to use the image v3, and send the 10% of the requests to version 3, and the 90% to version 1. Don’t send any traffic to version 2 as it’s a bug version. Run again the test-nodejs-app.sh. What is the service affection now?</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ kn service update nodejs-app --image $(oc get istag nodejs-app:v3 -o jsonpath='{.image.dockerImageReference}') --revision-name nodejs-app-v3 --traffic  nodejs-app-v1=90 --traffic nodejs-app-v3=10</code></pre>
+</div>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>Now there is no service affection.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="_images/canaray-deployment-v3.png" alt=".doc.imageblock { align-items: unset; }">
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>As version 3 is properly released, you can send the 100% of the traffic to version 3.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ kn service update nodejs-app --traffic  nodejs-app-v3=100</code></pre>
+</div>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="03-knative-scale.html">3. Autoscaling serverless applications</a></span>
+</nav>
+</article>
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <a class="rhd-logo" href="https://developers.redhat.com" target="_blank"></div>
+</footer>
+<script src="../_/js/vendor/clipboard.js"></script>
+<script src="../_/js/site.js"></script>
+<script async src="../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
