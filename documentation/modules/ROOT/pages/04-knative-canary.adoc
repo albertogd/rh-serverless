@@ -53,7 +53,24 @@ $ kn service create nodejs-app --image $(oc get istag nodejs-app:v1 -o jsonpath=
 $ kn service update nodejs-app --image $(oc get istag nodejs-app:v2 -o jsonpath='{.image.dockerImageReference}') --revision-name nodejs-app-v2 --traffic  nodejs-app-v1=90 --traffic nodejs-app-v2=10
 ----
 
-Run the script test-nodejs-app.sh to test the application. What is the affection of this wrong new version?
+Download the script https://raw.githubusercontent.com/albertogd/rh-serverless/master/apps/knative/scripts/test-nodejs-app.sh[test-nodejs-app.sh] and run it to test the application. What is the affection of this wrong new version?
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ wget https://raw.githubusercontent.com/albertogd/rh-serverless/master/apps/knative/scripts/test-nodejs-app.sh
+$ chmod +x ./test-nodejs-app.sh
+$ ./test-nodejs-app.sh
+Request #1: OK | Version: 1.0 | Time: 4.47s
+Request #2: KO
+Request #3: OK | Version: 1.0 | Time: .28s
+Request #4: OK | Version: 1.0 | Time: .28s
+Request #5: OK | Version: 1.0 | Time: .28s
+Request #6: OK | Version: 1.0 | Time: .28s
+Request #7: OK | Version: 1.0 | Time: .28s
+Request #8: OK | Version: 1.0 | Time: .33s
+Request #9: OK | Version: 1.0 | Time: .28s
+Request #10: OK | Version: 1.0 | Time: .28s
+----
 
 ====
 ++++
@@ -74,12 +91,27 @@ image::canaray-deployment-v2.png[]
 [source,bash,subs="+macros,+attributes"]
 ----
 $ kn service update nodejs-app --image $(oc get istag nodejs-app:v3 -o jsonpath='{.image.dockerImageReference}') --revision-name nodejs-app-v3 --traffic  nodejs-app-v1=90 --traffic nodejs-app-v3=10
+
+$ ./test-nodejs-app.sh
+Request #1: OK | Version: 1.0 | Time: 4.50s
+Request #2: OK | Version: 1.0 | Time: .33s
+Request #3: OK | Version: 1.0 | Time: .39s
+Request #4: OK | Version: 1.0 | Time: .39s
+Request #5: OK | Version: 1.0 | Time: .40s
+Request #6: OK | Version: 1.0 | Time: .28s
+Request #7: OK | Version: 1.0 | Time: .28s
+Request #8: OK | Version: 1.0 | Time: .28s
+Request #9: OK | Version: 1.0 | Time: .28s
+Request #10: OK | Version: 1.0 | Time: .28s
+Request #11: OK | Version: 3.0 | Time: 4.38s
+Request #12: OK | Version: 1.0 | Time: .28s
+Request #13: OK | Version: 1.0 | Time: .28s
 ----
 
 ====
 Now there is no service affection.
 
-image::canaray-deployment-v3.png[.doc.imageblock { align-items: unset; }]
+image::canaray-deployment-v3.png[]
 ====
 
 As version 3 is properly released, you can send the 100% of the traffic to version 3.
@@ -87,4 +119,23 @@ As version 3 is properly released, you can send the 100% of the traffic to versi
 [source,bash,subs="+macros,+attributes"]
 ----
 $ kn service update nodejs-app --traffic  nodejs-app-v3=100
+
+$ ./test-nodejs-app.sh
+Request #1: OK | Version: 3.0 | Time: 5.03s
+Request #2: OK | Version: 3.0 | Time: .28s
+Request #3: OK | Version: 3.0 | Time: .29s
+Request #4: OK | Version: 3.0 | Time: .29s
+Request #5: OK | Version: 3.0 | Time: .28s
+Request #6: OK | Version: 3.0 | Time: .28s
+Request #7: OK | Version: 3.0 | Time: .28s
+Request #8: OK | Version: 3.0 | Time: .28s
+Request #9: OK | Version: 3.0 | Time: .29s
+Request #10: OK | Version: 3.0 | Time: .29s
+Request #11: OK | Version: 3.0 | Time: .28s
 ----
+
+====
+Now all requests are going to the app version 3.
+
+image::canaray-deployment-v4.png[]
+====
