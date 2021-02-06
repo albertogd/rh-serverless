@@ -350,7 +350,7 @@ quarkus-app:latest                   image-registry.openshift-image-registry.svc
 <h2 id="autoscale"><a class="anchor" href="#autoscale"></a>Autoscaling Quarkus serverless app</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>4) Check there are no application pods as it’s a serverless app. Get the application route, and do a request. How long does it take to answer the request?  The script [create-replicas-quarkus-app.sh] generates the amount of requests needed so Knative autoscales the app to the replicas you want. Run create-replicas-quarkus-app.sh 2 to generate 2 replicas.</p>
+<p>4) Check there are no application pods as it’s a serverless app. Get the application route, and do a request. How long does it take to answer the request?  The script <a href="https://raw.githubusercontent.com/albertogd/rh-serverless/master/apps/knative/scripts/create-replicas-quarkus-app.sh">create-replicas-quarkus-app.sh</a> generates the amount of requests needed so Knative autoscales the app to the replicas you want. Run create-replicas-quarkus-app.sh 2 to generate 2 replicas.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -369,7 +369,7 @@ You can also use <a href="https://hey-release.s3.us-east-2.amazonaws.com/hey_lin
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ time curl -s $(oc get ksvc quarkus-app -o json | jq -r '.status.url') &gt;/dev/null
 curl -s $(oc get ksvc quarkus-app -o json | jq -r '.status.url') &gt; /dev/null  0,01s user 0,01s system 0% cpu 7,176 total
 
-$ wget
+$ wget <a href="https://raw.githubusercontent.com/albertogd/rh-serverless/master/apps/knative/scripts/create-replicas-quarkus-app.sh" class="bare">https://raw.githubusercontent.com/albertogd/rh-serverless/master/apps/knative/scripts/create-replicas-quarkus-app.sh</a>
 $ chmod +x ./create-replicas-quarkus-app.sh
 ./create-replicas-quarkus-app.sh 2
 Current pod nº: 0
