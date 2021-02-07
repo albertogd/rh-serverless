@@ -3,15 +3,21 @@
 In this exercise,  you’ll install (subscribe) Red Hat Openshift Serverless operator. Then, you’ll deploy a Quarkus application to test serverless autoscaling using Knative Pod Autoscaler (KPA) with a minimum of 0 pods, and scaling based on requests per second.
 
 [#install]
-== Install Red Hat Openshift Serverless
+== Install Prerequisites
+
+=== Install Red Hat Openshift Serverless
 
 1) Install Red Hat Openshift Serverless operator using the CLI or the https://docs.openshift.com/container-platform/4.6/serverless/installing_serverless/installing-openshift-serverless.html#serverless-install-web-console_installing-openshift-serverless[Web Console].
 
+====
 Go to Operator Hub,  search Red Hat OpenShift Serverless, and install. Keep the default options, click on Install and wait until the installation finishes.
+====
 
 After that, install Knative Serving using the https://docs.openshift.com/container-platform/4.6/serverless/installing_serverless/installing-knative-serving.html#serverless-install-serving-yaml_installing-knative-serving[CLI] or the https://docs.openshift.com/container-platform/4.6/serverless/installing_serverless/installing-knative-serving.html#serverless-install-serving-web-console_installing-knative-serving[Web Console].
 
+====
 Go to Openshift Serverless operator, select knative-serving project, and click on Install Knative Serving. Keep all the default values, and click on Install.
+====
 
 Check the installation finished properly.
 
@@ -27,69 +33,127 @@ Ready=True
 VersionMigrationEligible=True
 ----
 
+=== Kn Client 
+
 Download the Kn client for Linux from https://storage.googleapis.com/knative-nightly/client/latest/kn-linux-amd64[here], and save it in any folder of your path (i.e. /usr/local/bin). Check your kn client is working properly, and enable autocompletion for your shell.
 
 [.lines_7]
 [source,bash,subs="+macros,+attributes"]
 ----
 $ wget https://storage.googleapis.com/knative-nightly/client/latest/kn-linux-amd64
-sudo mv kn-linux-amd64 /usr/local/bin/kn
-sudo chmod +x /usr/local/bin/kn
-source <(kn completion bash)
-kn version
+$ sudo mv kn-linux-amd64 /usr/local/bin/kn
+$ sudo chmod +x /usr/local/bin/kn
+$ source <(kn completion bash)
+$ kn version
 ----
+
+=== Java OpenJDK 11
+
+Ensure you have installed `java-11-openjdk` and `java-11-openjdk-devel`, and `JAVA_HOME` env var is set.
+
+----
+$ sudo dnf install java-11-openjdk  java-11-openjdk-devel
+$ java -version
+$ echo $JAVA_HOME
+/usr/lib/jvm/java-11-openjdk-11.0.9.11-4.fc33.x86_64
+----
+
+=== Apache Maven 3.6.2 (or higher)
+
+Ensure you have installed Apache Maven 3.6.2 or higher.
+
+----
+$ sudo dnf install maven
+$ mvn -version
+Apache Maven 3.6.3 (Red Hat 3.6.3-5)
+Maven home: /usr/share/maven
+Java version: 11.0.9.1, vendor: Red Hat, Inc., runtime: /usr/lib/jvm/java-11-openjdk-11.0.9.11-4.fc33.x86_64
+Default locale: en_US, platform encoding: UTF-8
+OS name: "linux", version: "5.9.13-200.fc33.x86_64", arch: "amd64", family: "unix"
+----
+
 
 [#build]
 == Build the Quarkus app
 
-2) Create an image of the Quakus application using the non-native S2I.
+2) Download the Quarkus app source code to your computer. You con clone the repository https://github.com/albertogd/rh-serverless.git and go to apps/knative/quarkus. Create the project `quarkus-demo`, and compile with mvn the Quarkus application.
 
 [source,bash,subs="+macros,+attributes"]
 ----
-$ oc import-image --confirm openjdk/openjdk-11-rhel7 --from=registry.access.redhat.com/openjdk/openjdk-11-rhel7
+$ git clone https://github.com/albertogd/rh-serverless.git /tmp/rh-serverless
+$ cd /tmp/rh-serverless/apps/knative/quarkus
 
-$ oc new-build --name quarkus-app openjdk-11-rhel7~https://github.com/albertogd/rh-serverless.git --context-dir=apps/knative/quarkus --to quarkus-app:latest
-
-$ oc get istag
-NAME                     IMAGE REPOSITORY                                                                TAGS          UPDATED
-quarkus-app:latest                   image-registry.openshift-image-registry.svc:5000/demo2/quarkus-app@sha256:dc0b26a669cb483d978b6da83af2d760bbd434e4fe65ffad70085eac642ccba2   39 minutes ago
+$ oc new-project quarkus-demo
+$ ./mvnw clean package -Dquarkus.kubernetes.deploy=true
 ----
 
 [IMPORTANT]
 ====
-You can build the Quarkus application in a native way to improve much more performance, although building the image may take up to 20 minutes, and consume about 4 GB of memory and 1.5 CPUs.
+If you use a different project name, change the project name in `src/main/resources/application.properties`
 
-Use the ImageStream quay.io/quarkus/ubi-quarkus-native-s2i:20.3-java11 to build the Quarkus application in a native way.
+[source,bash]
+----
+quarkus.container-image.group=<project_name>
+----
+====
 
-*In my tests, using the image built in a native way, creating a pod took around 5 seconds. Using the non-native built image, took around 20 seconds.*
+[NOTE]
+====
+This is a basic Quarkus application where the https://access.redhat.com/documentation/en-us/red_hat_build_of_quarkus/1.7/html/deploying_your_quarkus_applications_as_openshift_serverless_services/proc-deploy-serverless-quarkus-java-app-openshift-ext_deploy-quarkus-openshift-serverless[following steps] have already been done:
 
-You can try both methods, and configure the knative service with different revisions, one for each build method, and compare.
+* Add the OpenShift extension to an existing project:
++
+----
+$ ./mvnw quarkus:add-extension -Dextensions="openshift"
+----
++
+
+*  Direct OpenShift to use the Open JDK 11 Red Hat Enterprise Linux 8 image. Added the following line to *application.properties*
++
+----
+quarkus.s2i.base-jvm-image=registry.access.redhat.com/ubi8/openjdk-11
+----
++
+
+* Direct OpenShift Serverless to pull your container image from the OpenShift internal registry. Added the following line to *application.properties*
++
+----
+quarkus.container-image.registry=image-registry.openshift-image-registry.svc:5000
+----
++
+
+* Enable the creation of deployment descriptors for Knative Serving. Added the following line to the *application.properties* file.
++
+----
+quarkus.kubernetes.deployment-target=knative
+----
++
+
+* Added the project so Quarkus can pull the image from the image registry. Added the following line to the *application.properties* file.
++
+----
+quarkus.container-image.group=quarkus-demo
+----
++
 ====
 
 [#service]
-== Create Knative Service
+== Configure Knative Service
 
-3) Create a Knative Service for the application using the image you’ve just created using kn. Configure it so it auto scales 1 replica each 5 requests per seconds (i.e. an application receiving 15 requests, should have 3 replicas). Use the following parameters:
+3) Configure the Knative Service for the application to  auto scales 1 replica each 5 requests per seconds (i.e. an application receiving 15 requests, should have 3 replicas). Use the following parameters:
 
 * **Service**: quarkus-app 
-* **Revision name**: quarkus-app-v1
-* **Image**: get the ImageStreamTag you created
+* **Revision name**: quarkus-app-v1 
 * **Scale**:
 ** Min: 0
 ** Max: 10
-* **Requests**:
-** CPU: 100m
-** Memory: 200Mi
-* **Limits**:
-** CPU: 200m
-** Memory: 400Mi
 * **Autoscale parameters**:
 ** Metrics: rps
 ** Target: 5
 
 [source,bash,subs="+macros,+attributes"]
 ----
-$ kn service create quarkus-app --image $(oc get istag quarkus-app:latest -o jsonpath='{.image.dockerImageReference}') --scale 0..10 --request 'cpu=100m,memory=200Mi' --limit 'cpu=200m,memory=400Mi' --revision-name quarkus-app-v1 --annotation autoscaling.knative.dev/metric="rps" --annotation autoscaling.knative.dev/target="5"
+$ kn service update quarkus-app --revision-name quarkus-app-v1 --scale 0..10 --annotation autoscaling.knative.dev/metric="rps" --annotation autoscaling.knative.dev/target="5"
 ----
 
 [#autoscale]
@@ -103,10 +167,17 @@ NOTE: You can also use https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_
 ----
 $ time curl -s $(oc get ksvc quarkus-app -o json | jq -r '.status.url') >/dev/null
 curl -s $(oc get ksvc quarkus-app -o json | jq -r '.status.url') > /dev/null  0,01s user 0,01s system 0% cpu 7,176 total
+----
 
+====
+It takes around 7 seconds
+====
+
+[source,bash,subs="+macros,+attributes"]
+----
 $ wget https://raw.githubusercontent.com/albertogd/rh-serverless/master/apps/knative/scripts/create-replicas-quarkus-app.sh
 $ chmod +x ./create-replicas-quarkus-app.sh
-./create-replicas-quarkus-app.sh 2
+$ ./create-replicas-quarkus-app.sh 2
 Current pod nº: 0
 Current pod nº: 0
 Current pod nº: 0
@@ -125,17 +196,21 @@ $ curl -s $(oc get ksvc quarkus-app -o json | jq -r '.status.url') >/dev/null
 
 $ oc get kpa
 NAME                     DESIREDSCALE   ACTUALSCALE   READY   REASON
-quarkus-app-v1                   1                                 1                   True  
+quarkus-app-v1               1               1        True  
 
 -- After 1 minute...
 
 $ oc get kpa
 NAME               DESIREDSCALE   ACTUALSCALE   READY   REASON
-quarkus-app                0                                 1                   False       NoTraffic
+quarkus-app              0             1        False   NoTraffic
 
 -- After some seconds...
 
 $ oc get kpa
 NAME               DESIREDSCALE   ACTUALSCALE   READY   REASON
-quarkus-app                0                                 0                   False       NoTraffic
+quarkus-app             0              0        False   NoTraffic
 ----
+
+====
+After the request, the DESIREDSCALE is 1, and ACTUALSCALE is 0. After 7 seconds, both are 1. Between 60-90 seconds, DESIREDSCALE becomes 0. And after 90 seconds, ACTUALSCALE becomes 0. 
+====

@@ -1,7 +1,5 @@
 * xref:01-setup.adoc[1. Setup]
 ** xref:01-setup.adoc#prerequisite[Prerequisites]
-** xref:01-setup.adoc#minikube[Setup Minikube]
-
 * xref:02-hpa.adoc[2. Horizontal Pod Autoscaler]
 ** xref:02-hpa.adoc#applications[2.1 Create PHP and Python Applications]
 ** xref:02-hpa.adoc#requests[2.2 Configure requests and limits]
@@ -11,7 +9,7 @@
 * xref:03-knative-scale.adoc[3. Autoscaling serverless applications]
 ** xref:03-knative-scale.adoc#install[3.1 Install Red Hat Openshift Serverles]
 ** xref:03-knative-scale.adoc#build[3.2 Build a Quarkus application]
-** xref:03-knative-scale.adoc#service[3.3 Create a Knative Service]
+** xref:03-knative-scale.adoc#service[3.3 Configure a Knative Service]
 ** xref:03-knative-scale.adoc#autoscale[3.4 Autoscale the Quarkus application]
 
 * xref:04-knative-canary.adoc[4. Canary deployment of a serverless application]
