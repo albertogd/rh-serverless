@@ -165,7 +165,7 @@ Create the image `quarkus-native-app:v1` using the dockerfile `src/main/docker/D
 
 [source,bash,subs="+macros,+attributes"]
 ----
-$ podman build -f src/main/docker/Dockerfile.native -t quarkus-native-app:v1 .
+$ podman build -f src/main/docker/Dockerfile.native -t quarkus-native-app:v1.0 .
 ----
 
 Expose Openshift registry using DefaultRoute:
@@ -215,14 +215,14 @@ Push the container to Openshift registry:
 [source,bash,subs="+macros,+attributes"]
 ----
 $ podman login -u admin -p $(oc whoami -t) $(oc get route default-route -n openshift-image-registry -o json | jq -r '.spec.host')
-$ skopeo copy containers-storage:localhost/quarkus-native-app:v1 docker://$(oc get route default-route -n openshift-image-registry -o json | jq -r '.spec.host')/quarkus-demo/quarkus-native-app:v1.0 --dest-tls-verify=false
+$ skopeo copy containers-storage:localhost/quarkus-native-app:v1.0 docker://$(oc get route default-route -n openshift-image-registry -o json | jq -r '.spec.host')/quarkus-demo/quarkus-native-app:v1.0 --dest-tls-verify=false
 ----
 
 Create the Knative Service `quarkus-native-app` using the Quarkus native image
 
 [source,bash,subs="+macros,+attributes"]
 ----
-$ kn service create quarkus-native-app --image $(oc get istag quarkus-native-app:v1 -o jsonpath='{.image.dockerImageReference}')  --revision-name quarkus-native-app-v1
+$ kn service create quarkus-native-app --image $(oc get istag quarkus-native-app:v1.0 -o jsonpath='{.image.dockerImageReference}')  --revision-name quarkus-native-app-v1
 ----
 
 Check the application works properly. Get the route, and make a curl request or browse:

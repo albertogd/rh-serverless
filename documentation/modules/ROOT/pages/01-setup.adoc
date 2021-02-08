@@ -4,7 +4,7 @@ include::_attributes.adoc[]
 [#prerequisite]
 == Prerequisites
 
-For this lab you need an Openshift 4 cluster with cluster-admin privileges. You can create an Openshift 4 Cluster in QuickLab. Go to https://quicklab.upshift.redhat.com[https://quicklab.upshift.redhat.com], and click in New Cluster. Use openshift4upi template, and the region you want. Use 1 master and 2 workers.
+For this lab you need an Openshift 4 cluster with cluster-admin privileges. You can create an Openshift 4 Cluster in QuickLab. Go to https://quicklab.upshift.redhat.com[https://quicklab.upshift.redhat.com], and click in New Cluster. Use `openshift4upi` template, and the region you want. Use 1 master and 2 workers. After the cluster is provisioned, you need to click on `New Bundle`, and select `openshift4upi`. In the options, in `Additional identity provider`, select `htpasswd`. You'll need in exercise 2 another user, so you won't need to configure OAuth. 
 
 NOTE: You need to be logged in Red Hat VPN to access quicklab
 
@@ -17,3 +17,11 @@ NOTE: Red Hat Openshift Serverless and Knative CLI is installed in Exercise 2
 ++++
 
 image::quicklab.png[]
+
+Click on `New Bundle`:
+
+image::quicklab2.png[]
+
+Select `openshift4upi` in `Bundle`, and `htpasswd` in `Additional identity provider`:
+
+image::quicklab3.png[]
