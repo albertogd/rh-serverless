@@ -183,7 +183,7 @@
 <h2 id="prerequisite"><a class="anchor" href="#prerequisite"></a>Prerequisites</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>For this lab you need an Openshift 4 cluster with cluster-admin privileges. You can create an Openshift 4 Cluster in QuickLab. Go to <a href="https://quicklab.upshift.redhat.com">https://quicklab.upshift.redhat.com</a>, and click in New Cluster. Use openshift4upi template, and the region you want. Use 1 master and 2 workers.</p>
+<p>For this lab you need an Openshift 4 cluster with cluster-admin privileges. You can create an Openshift 4 Cluster in QuickLab. Go to <a href="https://quicklab.upshift.redhat.com">https://quicklab.upshift.redhat.com</a>, and click in New Cluster. Use <code>openshift4upi</code> template, and the region you want. Use 1 master and 2 workers. After the cluster is provisioned, you need to click on <code>New Bundle</code>, and select <code>openshift4upi</code>. In the options, in <code>Additional identity provider</code>, select <code>htpasswd</code>. You&#8217;ll need in exercise 2 another user, so you won&#8217;t need to configure OAuth.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -215,6 +215,22 @@ Red Hat Openshift Serverless and Knative CLI is installed in Exercise 2
 <div class="imageblock">
 <div class="content">
 <img src="_images/quicklab.png" alt="quicklab">
+</div>
+</div>
+<div class="paragraph">
+<p>Click on <code>New Bundle</code>:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="_images/quicklab2.png" alt="quicklab2">
+</div>
+</div>
+<div class="paragraph">
+<p>Select <code>openshift4upi</code> in <code>Bundle</code>, and <code>htpasswd</code> in <code>Additional identity provider</code>:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="_images/quicklab3.png" alt="quicklab3">
 </div>
 </div>
 </div>

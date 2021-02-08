@@ -410,7 +410,7 @@ $ curl $(oc get ksvc quarkus-app -o json | jq -r '.status.url')</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ podman build -f src/main/docker/Dockerfile.native -t quarkus-native-app:v1 .</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ podman build -f src/main/docker/Dockerfile.native -t quarkus-native-app:v1.0 .</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -473,7 +473,7 @@ $ oc edit OAuth</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ podman login -u admin -p $(oc whoami -t) $(oc get route default-route -n openshift-image-registry -o json | jq -r '.spec.host')
-$ skopeo copy containers-storage:localhost/quarkus-native-app:v1 docker://$(oc get route default-route -n openshift-image-registry -o json | jq -r '.spec.host')/quarkus-demo/quarkus-native-app:v1.0 --dest-tls-verify=false</code></pre>
+$ skopeo copy containers-storage:localhost/quarkus-native-app:v1.0 docker://$(oc get route default-route -n openshift-image-registry -o json | jq -r '.spec.host')/quarkus-demo/quarkus-native-app:v1.0 --dest-tls-verify=false</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -481,7 +481,7 @@ $ skopeo copy containers-storage:localhost/quarkus-native-app:v1 docker://$(oc g
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ kn service create quarkus-native-app --image $(oc get istag quarkus-native-app:v1 -o jsonpath='{.image.dockerImageReference}')  --revision-name quarkus-native-app-v1</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ kn service create quarkus-native-app --image $(oc get istag quarkus-native-app:v1.0 -o jsonpath='{.image.dockerImageReference}')  --revision-name quarkus-native-app-v1</code></pre>
 </div>
 </div>
 <div class="paragraph">
