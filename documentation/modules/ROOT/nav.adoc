@@ -8,9 +8,11 @@
 
 * xref:03-knative-scale.adoc[3. Autoscaling serverless applications]
 ** xref:03-knative-scale.adoc#install[3.1 Install Red Hat Openshift Serverles]
-** xref:03-knative-scale.adoc#build[3.2 Build a Quarkus application]
-** xref:03-knative-scale.adoc#service[3.3 Configure a Knative Service]
-** xref:03-knative-scale.adoc#autoscale[3.4 Autoscale the Quarkus application]
+** xref:03-knative-scale.adoc#quarkus[3.2 Build a Quarkus application]
+** xref:03-knative-scale.adoc#native[3.3 Deploy a Quarkus application compiled to a Native Executable]
+** xref:03-knative-scale.adoc#java[3.4 Create a Java Spring Boot app]
+** xref:03-knative-scale.adoc#test[3.4 Test the applications]
+** xref:03-knative-scale.adoc#test[3.5 Configure a Knative Service to autoscale]
 
 * xref:04-knative-canary.adoc[4. Canary deployment of a serverless application]
 ** xref:04-knative-canary.adoc#build[4.1 Build three NodeJS applications]

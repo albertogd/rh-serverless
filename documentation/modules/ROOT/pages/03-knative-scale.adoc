@@ -72,11 +72,10 @@ Default locale: en_US, platform encoding: UTF-8
 OS name: "linux", version: "5.9.13-200.fc33.x86_64", arch: "amd64", family: "unix"
 ----
 
-
-[#build]
+[#quarkus]
 == Build the Quarkus app
 
-2) Download the Quarkus app source code to your computer. You con clone the repository https://github.com/albertogd/rh-serverless.git and go to apps/knative/quarkus. Create the project `quarkus-demo`, and compile with mvn the Quarkus application.
+2) Download the Quarkus app source code to your computer. You can clone the repository `https://github.com/albertogd/rh-serverless.git` and go to `apps/knative/quarkus`. Create the project `quarkus-demo`, and compile with mvn the Quarkus application.
 
 [source,bash,subs="+macros,+attributes"]
 ----
@@ -137,10 +136,164 @@ quarkus.container-image.group=quarkus-demo
 +
 ====
 
-[#service]
-== Configure Knative Service
+Check the application works properly. Get the route, and make a curl request or browse:
 
-3) Configure the Knative Service for the application to  auto scales 1 replica each 5 requests per seconds (i.e. an application receiving 15 requests, should have 3 replicas). Use the following parameters:
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc get ksvc quarkus-app -o json | jq -r '.status.url'
+$ curl $(oc get ksvc quarkus-app -o json | jq -r '.status.url')
+----
+
+[#native]
+== Deploy the Quarkus application compiled to a Native Executable
+
+3) Now you'll deploy the Quarkus application compileted to a native executable.
+
+[NOTE]
+====
+These steps are based on https://access.redhat.com/documentation/en-us/red_hat_build_of_quarkus/1.7/html/deploying_your_quarkus_applications_on_red_hat_openshift_container_platform/con-deploying-quarkus-serverless[deploy a Quarkus application compiled to a native executable on Red Hat OpenShift Container Platform using OpenShift Serverless Knative Serving].
+====
+
+In the same repository, go to `apps/knative/quarkus-native`. Build a Linux executable:
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ ./mvnw package -Pnative -Dquarkus.native.container-build=true -Dquarkus.native.container-runtime=podman -Dquarkus.native.builder-image=registry.access.redhat.com/quarkus/mandrel-20-rhel8:20.1
+----
+
+Create the image `quarkus-native-app:v1` using the dockerfile `src/main/docker/Dockerfile.native`:
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ podman build -f src/main/docker/Dockerfile.native -t quarkus-native-app:v1 .
+----
+
+Expose Openshift registry using DefaultRoute:
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc patch configs.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
+----
+
+Log in Openshift with a user with permissions in project quarkus-demo and get the token.
+
+[NOTE]
+====
+If you don't have a IdentityProvider, follow these steps:
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ htpasswd -c -B -b /tmp/htpasswd admin redhat
+$ oc create secret generic htpass-secret --from-file=htpasswd=/tmp/htpasswd -n openshift-config
+$ oc edit OAuth
+----
+
+In OAuth add:
+
+[source,yaml,subs="+macros,+attributes"]
+----
+  identityProviders:
+  - name: htpasswd 
+    mappingMethod: claim 
+    type: HTPasswd
+    htpasswd:
+      fileData:
+        name: htpass-secret
+----
+
+Wait a couple of minutes. After that, you shoule be able to log in with user `admin` and password `redhat`.
+
+====
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc adm policy add-clusterrole-to-user cluster-admin admin
+----
+
+Push the container to Openshift registry:
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ podman login -u admin -p $(oc whoami -t) $(oc get route default-route -n openshift-image-registry -o json | jq -r '.spec.host')
+$ skopeo copy containers-storage:localhost/quarkus-native-app:v1 docker://$(oc get route default-route -n openshift-image-registry -o json | jq -r '.spec.host')/quarkus-demo/quarkus-native-app:v1.0 --dest-tls-verify=false
+----
+
+Create the Knative Service `quarkus-native-app` using the Quarkus native image
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ kn service create quarkus-native-app --image $(oc get istag quarkus-native-app:v1 -o jsonpath='{.image.dockerImageReference}')  --revision-name quarkus-native-app-v1
+----
+
+Check the application works properly. Get the route, and make a curl request or browse:
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc get ksvc quarkus-native-app -o json | jq -r '.status.url'
+$ curl $(oc get ksvc quarkus-native-app -o json | jq -r '.status.url')
+----
+
+[#java]
+== Create a Java Spring Boot app
+
+4) Now you'll build a Java Spring Boot application image using S2I, and you'll use that image to create a Knative Service. Import the image stream `openjdk18-openshift:1.1`, and use that image stream to build the application:
+
+- *Name*: java-app
+- *Repo*: https://github.com/albertogd/rh-serverless.git
+- *Branch*: master
+- *Path*: apps/knative/java
+- *Image Stream*: registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift:1.1
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc import-image --confirm openjdk/openjdk18-openshift:1.1 --from=registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift:1.1
+$ oc new-build --name java-app --image-stream openjdk18-openshift:1.1 https://github.com/albertogd/serverless-apps.git#serverless --context-dir=knative/java --to java-app:v1
+----
+
+Create the Knative Service `java-app`, and configure the revision-name as `java-app-v1`.
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ kn service create java-app --image $(oc get istag java-app:v1 -o jsonpath='{.image.dockerImageReference}')  --revision-name java-app-v1
+----
+
+Check the application works properly. Get the route, and make a curl request or browse:
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ oc get ksvc quarkus-app -o json | jq -r '.status.url'
+$ curl $(oc get ksvc java-app -o json | jq -r '.status.url')
+----
+
+[#test]
+== Test the applications
+
+5) Make a request to each of you applications. How long does it take each answer?
+
+[source,bash,subs="+macros,+attributes"]
+----
+$ time curl $(oc get ksvc quarkus-app -o json | jq -r '.status.url')
+... 0,01s user 0,01s system 0% cpu 7,176 total
+
+$ time curl $(oc get ksvc quarkus-native-app -o json | jq -r '.status.url')
+...   0,01s user 0,01s system 0% cpu 3,839 total
+
+$ time curl $(oc get ksvc java-app -o json | jq -r '.status.url')
+... 0,01s user 0,01s system 0% cpu 10,191 total
+----
+
+====
+
+* Quarkus native application takes 4 second
+* Quarkus application takes around 7 seconds
+* Java Spring Boot applicattion takes around 10 seconds
+
+====
+
+[#autoscale]
+== Configure a Knative Service to autoscale
+
+6) Configure the Knative Service `quarkus-app` for the application to  auto scales 1 replica each 5 requests per seconds (i.e. an application receiving 15 requests, should have 3 replicas). Use the following parameters:
 
 * **Service**: quarkus-app 
 * **Revision name**: quarkus-app-v1 
@@ -156,22 +309,9 @@ quarkus.container-image.group=quarkus-demo
 $ kn service update quarkus-app --revision-name quarkus-app-v1 --scale 0..10 --annotation autoscaling.knative.dev/metric="rps" --annotation autoscaling.knative.dev/target="5"
 ----
 
-[#autoscale]
-== Autoscaling Quarkus serverless app
-
-4) Check there are no application pods as it’s a serverless app. Get the application route, and do a request. How long does it take to answer the request?  The script https://raw.githubusercontent.com/albertogd/rh-serverless/master/apps/knative/scripts/create-replicas-quarkus-app.sh[create-replicas-quarkus-app.sh] generates the amount of requests needed so Knative autoscales the app to the replicas you want. Run create-replicas-quarkus-app.sh 2 to generate 2 replicas.
+The script https://raw.githubusercontent.com/albertogd/rh-serverless/master/apps/knative/scripts/create-replicas-quarkus-app.sh[create-replicas-quarkus-app.sh] generates the amount of requests needed so Knative autoscales the app to the replicas you want. Run create-replicas-quarkus-app.sh 2 to generate 2 replicas.
 
 NOTE: You can also use https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64[hey] to generate concurrent request per second
-
-[source,bash,subs="+macros,+attributes"]
-----
-$ time curl -s $(oc get ksvc quarkus-app -o json | jq -r '.status.url') >/dev/null
-curl -s $(oc get ksvc quarkus-app -o json | jq -r '.status.url') > /dev/null  0,01s user 0,01s system 0% cpu 7,176 total
-----
-
-====
-It takes around 7 seconds
-====
 
 [source,bash,subs="+macros,+attributes"]
 ----
