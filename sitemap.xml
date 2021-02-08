@@ -2,22 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
 <loc>https://redhat-scholars.github.io/course-template/rh-serverless/01-setup.html</loc>
-<lastmod>2021-02-07T13:06:14.659Z</lastmod>
+<lastmod>2021-02-08T21:38:21.823Z</lastmod>
 </url>
 <url>
 <loc>https://redhat-scholars.github.io/course-template/rh-serverless/02-hpa.html</loc>
-<lastmod>2021-02-07T13:06:14.659Z</lastmod>
+<lastmod>2021-02-08T21:38:21.823Z</lastmod>
 </url>
 <url>
 <loc>https://redhat-scholars.github.io/course-template/rh-serverless/03-knative-scale.html</loc>
-<lastmod>2021-02-07T13:06:14.659Z</lastmod>
+<lastmod>2021-02-08T21:38:21.823Z</lastmod>
 </url>
 <url>
 <loc>https://redhat-scholars.github.io/course-template/rh-serverless/04-knative-canary.html</loc>
-<lastmod>2021-02-07T13:06:14.659Z</lastmod>
+<lastmod>2021-02-08T21:38:21.823Z</lastmod>
 </url>
 <url>
 <loc>https://redhat-scholars.github.io/course-template/rh-serverless/index.html</loc>
-<lastmod>2021-02-07T13:06:14.659Z</lastmod>
+<lastmod>2021-02-08T21:38:21.823Z</lastmod>
 </url>
 </urlset>

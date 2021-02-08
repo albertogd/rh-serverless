@@ -106,13 +106,19 @@
     <a class="nav-link" href="#install">3.1 Install Red Hat Openshift Serverles</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="#build">3.2 Build a Quarkus application</a>
+    <a class="nav-link" href="#quarkus">3.2 Build a Quarkus application</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="#service">3.3 Configure a Knative Service</a>
+    <a class="nav-link" href="#native">3.3 Deploy a Quarkus application compiled to a Native Executable</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="#autoscale">3.4 Autoscale the Quarkus application</a>
+    <a class="nav-link" href="#java">3.4 Create a Java Spring Boot app</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="#test">3.4 Test the applications</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="#test">3.5 Configure a Knative Service to autoscale</a>
   </li>
 </ul>
   </li>
@@ -269,10 +275,10 @@ OS name: "linux", version: "5.9.13-200.fc33.x86_64", arch: "amd64", family: "uni
 </div>
 </div>
 <div class="sect1">
-<h2 id="build"><a class="anchor" href="#build"></a>Build the Quarkus app</h2>
+<h2 id="quarkus"><a class="anchor" href="#quarkus"></a>Build the Quarkus app</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>2) Download the Quarkus app source code to your computer. You con clone the repository <a href="https://github.com/albertogd/rh-serverless.git" class="bare">https://github.com/albertogd/rh-serverless.git</a> and go to apps/knative/quarkus. Create the project <code>quarkus-demo</code>, and compile with mvn the Quarkus application.</p>
+<p>2) Download the Quarkus app source code to your computer. You can clone the repository <code><a href="https://github.com/albertogd/rh-serverless.git" class="bare">https://github.com/albertogd/rh-serverless.git</a></code> and go to <code>apps/knative/quarkus</code>. Create the project <code>quarkus-demo</code>, and compile with mvn the Quarkus application.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -360,13 +366,227 @@ $ ./mvnw clean package -Dquarkus.kubernetes.deploy=true</code></pre>
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p>Check the application works properly. Get the route, and make a curl request or browse:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get ksvc quarkus-app -o json | jq -r '.status.url'
+$ curl $(oc get ksvc quarkus-app -o json | jq -r '.status.url')</code></pre>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="service"><a class="anchor" href="#service"></a>Configure Knative Service</h2>
+<h2 id="native"><a class="anchor" href="#native"></a>Deploy the Quarkus application compiled to a Native Executable</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>3) Configure the Knative Service for the application to  auto scales 1 replica each 5 requests per seconds (i.e. an application receiving 15 requests, should have 3 replicas). Use the following parameters:</p>
+<p>3) Now you&#8217;ll deploy the Quarkus application compileted to a native executable.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>These steps are based on <a href="https://access.redhat.com/documentation/en-us/red_hat_build_of_quarkus/1.7/html/deploying_your_quarkus_applications_on_red_hat_openshift_container_platform/con-deploying-quarkus-serverless">deploy a Quarkus application compiled to a native executable on Red Hat OpenShift Container Platform using OpenShift Serverless Knative Serving</a>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>In the same repository, go to <code>apps/knative/quarkus-native</code>. Build a Linux executable:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ ./mvnw package -Pnative -Dquarkus.native.container-build=true -Dquarkus.native.container-runtime=podman -Dquarkus.native.builder-image=registry.access.redhat.com/quarkus/mandrel-20-rhel8:20.1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Create the image <code>quarkus-native-app:v1</code> using the dockerfile <code>src/main/docker/Dockerfile.native</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ podman build -f src/main/docker/Dockerfile.native -t quarkus-native-app:v1 .</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expose Openshift registry using DefaultRoute:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc patch configs.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Log in Openshift with a user with permissions in project quarkus-demo and get the token.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>If you don&#8217;t have a IdentityProvider, follow these steps:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ htpasswd -c -B -b /tmp/htpasswd admin redhat
+$ oc create secret generic htpass-secret --from-file=htpasswd=/tmp/htpasswd -n openshift-config
+$ oc edit OAuth</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In OAuth add:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">  identityProviders:
+  - name: htpasswd
+    mappingMethod: claim
+    type: HTPasswd
+    htpasswd:
+      fileData:
+        name: htpass-secret</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wait a couple of minutes. After that, you shoule be able to log in with user <code>admin</code> and password <code>redhat</code>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc adm policy add-clusterrole-to-user cluster-admin admin</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Push the container to Openshift registry:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ podman login -u admin -p $(oc whoami -t) $(oc get route default-route -n openshift-image-registry -o json | jq -r '.spec.host')
+$ skopeo copy containers-storage:localhost/quarkus-native-app:v1 docker://$(oc get route default-route -n openshift-image-registry -o json | jq -r '.spec.host')/quarkus-demo/quarkus-native-app:v1.0 --dest-tls-verify=false</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Create the Knative Service <code>quarkus-native-app</code> using the Quarkus native image</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ kn service create quarkus-native-app --image $(oc get istag quarkus-native-app:v1 -o jsonpath='{.image.dockerImageReference}')  --revision-name quarkus-native-app-v1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Check the application works properly. Get the route, and make a curl request or browse:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get ksvc quarkus-native-app -o json | jq -r '.status.url'
+$ curl $(oc get ksvc quarkus-native-app -o json | jq -r '.status.url')</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="java"><a class="anchor" href="#java"></a>Create a Java Spring Boot app</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>4) Now you&#8217;ll build a Java Spring Boot application image using S2I, and you&#8217;ll use that image to create a Knative Service. Import the image stream <code>openjdk18-openshift:1.1</code>, and use that image stream to build the application:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Name</strong>: java-app</p>
+</li>
+<li>
+<p><strong>Repo</strong>: <a href="https://github.com/albertogd/rh-serverless.git" class="bare">https://github.com/albertogd/rh-serverless.git</a></p>
+</li>
+<li>
+<p><strong>Branch</strong>: master</p>
+</li>
+<li>
+<p><strong>Path</strong>: apps/knative/java</p>
+</li>
+<li>
+<p><strong>Image Stream</strong>: registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift:1.1</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc import-image --confirm openjdk/openjdk18-openshift:1.1 --from=registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift:1.1
+$ oc new-build --name java-app --image-stream openjdk18-openshift:1.1 <a href="https://github.com/albertogd/serverless-apps.git#serverless" class="bare">https://github.com/albertogd/serverless-apps.git#serverless</a> --context-dir=knative/java --to java-app:v1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Create the Knative Service <code>java-app</code>, and configure the revision-name as <code>java-app-v1</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ kn service create java-app --image $(oc get istag java-app:v1 -o jsonpath='{.image.dockerImageReference}')  --revision-name java-app-v1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Check the application works properly. Get the route, and make a curl request or browse:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get ksvc quarkus-app -o json | jq -r '.status.url'
+$ curl $(oc get ksvc java-app -o json | jq -r '.status.url')</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="test"><a class="anchor" href="#test"></a>Test the applications</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>5) Make a request to each of you applications. How long does it take each answer?</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ time curl $(oc get ksvc quarkus-app -o json | jq -r '.status.url')
+... 0,01s user 0,01s system 0% cpu 7,176 total
+
+$ time curl $(oc get ksvc quarkus-native-app -o json | jq -r '.status.url')
+...   0,01s user 0,01s system 0% cpu 3,839 total
+
+$ time curl $(oc get ksvc java-app -o json | jq -r '.status.url')
+... 0,01s user 0,01s system 0% cpu 10,191 total</code></pre>
+</div>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>Quarkus native application takes 4 second</p>
+</li>
+<li>
+<p>Quarkus application takes around 7 seconds</p>
+</li>
+<li>
+<p>Java Spring Boot applicattion takes around 10 seconds</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="autoscale"><a class="anchor" href="#autoscale"></a>Configure a Knative Service to autoscale</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>6) Configure the Knative Service <code>quarkus-app</code> for the application to  auto scales 1 replica each 5 requests per seconds (i.e. an application receiving 15 requests, should have 3 replicas). Use the following parameters:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -409,13 +629,8 @@ $ ./mvnw clean package -Dquarkus.kubernetes.deploy=true</code></pre>
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ kn service update quarkus-app --revision-name quarkus-app-v1 --scale 0..10 --annotation autoscaling.knative.dev/metric="rps" --annotation autoscaling.knative.dev/target="5"</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="autoscale"><a class="anchor" href="#autoscale"></a>Autoscaling Quarkus serverless app</h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>4) Check there are no application pods as it’s a serverless app. Get the application route, and do a request. How long does it take to answer the request?  The script <a href="https://raw.githubusercontent.com/albertogd/rh-serverless/master/apps/knative/scripts/create-replicas-quarkus-app.sh">create-replicas-quarkus-app.sh</a> generates the amount of requests needed so Knative autoscales the app to the replicas you want. Run create-replicas-quarkus-app.sh 2 to generate 2 replicas.</p>
+<p>The script <a href="https://raw.githubusercontent.com/albertogd/rh-serverless/master/apps/knative/scripts/create-replicas-quarkus-app.sh">create-replicas-quarkus-app.sh</a> generates the amount of requests needed so Knative autoscales the app to the replicas you want. Run create-replicas-quarkus-app.sh 2 to generate 2 replicas.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -428,19 +643,6 @@ You can also use <a href="https://hey-release.s3.us-east-2.amazonaws.com/hey_lin
 </td>
 </tr>
 </table>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ time curl -s $(oc get ksvc quarkus-app -o json | jq -r '.status.url') &gt;/dev/null
-curl -s $(oc get ksvc quarkus-app -o json | jq -r '.status.url') &gt; /dev/null  0,01s user 0,01s system 0% cpu 7,176 total</code></pre>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>It takes around 7 seconds</p>
-</div>
-</div>
 </div>
 <div class="listingblock">
 <div class="content">
