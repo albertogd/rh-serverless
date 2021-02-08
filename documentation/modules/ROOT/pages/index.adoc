@@ -18,7 +18,7 @@ xref:02-hpa.adoc[Start]
 
 === 2. Autoscale Serverless applications with Knative
 
-Autoscale a Quarkus serverless application based on Requests per second.
+Deploy a Quarkus application, a Quarkus application compiled to a native executable and a Java Spring Boot to compare startup times. Autoscale a Quarkus serverless application based on Requests per second.
 
 xref:03-knative-scale.adoc[Start]
 
