@@ -182,7 +182,7 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>In this exercise,  you’ll install (subscribe) Red Hat Openshift Serverless operator. Then, you’ll deploy a Quarkus application to test serverless autoscaling using Knative Pod Autoscaler (KPA) with a minimum of 0 pods, and scaling based on requests per second.</p>
+<p>In this exercise,  you’ll start installing (subscribe) Red Hat Openshift Serverless operator. Then, you’ll deploy a Quarkus application, a  Quarkus application compiled to a native executable and a Java Spring Boot application to compare startup times. Finally you&#8217;ll test serverless autoscaling using Knative Pod Autoscaler (KPA) with a minimum of 0 pods, and scaling based on requests per second.</p>
 </div>
 </div>
 </div>
@@ -275,7 +275,7 @@ OS name: "linux", version: "5.9.13-200.fc33.x86_64", arch: "amd64", family: "uni
 </div>
 </div>
 <div class="sect1">
-<h2 id="quarkus"><a class="anchor" href="#quarkus"></a>Build the Quarkus app</h2>
+<h2 id="quarkus"><a class="anchor" href="#quarkus"></a>Deploy a Quarkus app</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>2) Download the Quarkus app source code to your computer. You can clone the repository <code><a href="https://github.com/albertogd/rh-serverless.git" class="bare">https://github.com/albertogd/rh-serverless.git</a></code> and go to <code>apps/knative/quarkus</code>. Create the project <code>quarkus-demo</code>, and compile with mvn the Quarkus application.</p>
@@ -378,7 +378,7 @@ $ curl $(oc get ksvc quarkus-app -o json | jq -r '.status.url')</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="native"><a class="anchor" href="#native"></a>Deploy the Quarkus application compiled to a Native Executable</h2>
+<h2 id="native"><a class="anchor" href="#native"></a>Deploy a Quarkus application compiled to a Native Executable</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>3) Now you&#8217;ll deploy the Quarkus application compileted to a native executable.</p>
