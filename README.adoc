@@ -1,5 +1,7 @@
 # Autoscaling serverless applications in Openshift
 
+https://albertogd.github.io/rh-serverless/rh-serverless/index.html[Start Autoscaling serverless applications in Openshift workshop]
+
 ## Introduction
 Autoscaling serverless applications in Openshift is a workshop to get familiar with autoscaling and Knative in Openshift. You'll start creating a Horizontal Pod Autoscaler to autoscale based on CPU and Memory utilization. Then, you'll create a Quarkus serverless application using Knative. Finally, you'll release a new version of an application using a canary deployment routing only a small amount of traffic.
 
